@@ -18,6 +18,10 @@ final postsRef = Firestore.instance.collection('posts');
 final commentssRef = Firestore.instance.collection('comments');
 final activityFeedRef = Firestore.instance.collection('feed');
 final DateTime timestamp = DateTime.now();
+final followersRef = Firestore.instance.collection('followers');
+final followingRef = Firestore.instance.collection('following');
+final timelineRef = Firestore.instance.collection('timeline');
+final chats = Firestore.instance.collection('chats');
 User currentUser;
 
 class Home extends StatefulWidget {
@@ -48,9 +52,9 @@ class _HomeState extends State<Home> {
     });
   }
 
-  handleSignIn(GoogleSignInAccount account) {
+  handleSignIn(GoogleSignInAccount account) async{
     if (account != null) {
-      createUserInFirestore();
+      await createUserInFirestore();
       setState(() {
         isAuth = true;
       });
@@ -121,7 +125,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body: PageView(
         children: <Widget>[
-          Timeline(),
+          Timeline(currentuser: currentUser.id),
           ActivityFeed(),
           Upload(currentUser: currentUser),
           Search(),
@@ -140,7 +144,7 @@ class _HomeState extends State<Home> {
             items: [
               BottomNavigationBarItem(
                 icon: Icon(
-                  Icons.whatshot,
+                  Icons.messenger_outline_rounded,
                   size: pageIndex == 0 ? 45.0 : 28.0,
                 ),
               ),

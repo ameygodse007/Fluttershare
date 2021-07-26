@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttershare/models/user.dart';
+import 'package:fluttershare/pages/activity_feed.dart';
 import 'package:fluttershare/pages/comments.dart';
 import 'package:fluttershare/pages/home.dart';
 import 'package:fluttershare/widgets/custom_image.dart';
@@ -92,6 +93,69 @@ class _PostState extends State<Post> {
     this.likes,
     this.likeCount,
   });
+  deletePost() async {
+    // delete post itself
+    postsRef
+        .document(ownerId)
+        .collection('userPosts')
+        .document(postId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+        setState(() {});
+      }
+    });
+    // delete uploaded image for thep ost
+    storageRef.child("post_$postId.jpg").delete();
+    // then delete all activity feed notifications
+    QuerySnapshot activityFeedSnapshot = await activityFeedRef
+        .document(ownerId)
+        .collection("feedItems")
+        .where('postId', isEqualTo: postId)
+        .getDocuments();
+    activityFeedSnapshot.documents.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // then delete all comments
+    QuerySnapshot commentsSnapshot = await commentssRef
+        .document(postId)
+        .collection('comments')
+        .getDocuments();
+    commentsSnapshot.documents.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  }
+
+   handleDeletePost(BuildContext parentContext) {
+    return showDialog(
+        context: parentContext,
+        builder: (context) {
+          return SimpleDialog(
+            title: Text("Remove this post?"),
+            children: <Widget>[
+              SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    deletePost();
+                    setState(() {});
+                  },
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  )),
+              SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel')),
+            ],
+          );
+        });
+  }
+
 
   buildPostHeader() {
     return FutureBuilder(
@@ -107,7 +171,7 @@ class _PostState extends State<Post> {
             backgroundColor: Colors.grey,
           ),
           title: GestureDetector(
-            onTap: () => print('showing profile'),
+            onTap: () => showsearchProfile(context, profileId: user.id),
             child: Text(
               user.username,
               style: TextStyle(
@@ -118,7 +182,7 @@ class _PostState extends State<Post> {
           ),
           subtitle: Text(location),
           trailing: IconButton(
-            onPressed: () => print('deleting post'),
+            onPressed: () => handleDeletePost(context),
             icon: Icon(Icons.more_vert),
           ),
         );
@@ -200,10 +264,41 @@ class _PostState extends State<Post> {
 
   buildPostImage() {
     return GestureDetector(
-      onDoubleTap: handleLikePost,
+      onDoubleTap: () {
+        bool _isLiked = likes[currentUserId] == true;
+        if (!_isLiked) {
+          postsRef
+              .document(ownerId)
+              .collection('userPosts')
+              .document(postId)
+              .updateData({'likes.$currentUserId': true});
+          addLikeToActivityFeed();
+          setState(() {
+            likeCount += 1;
+            isLiked = true;
+            likes[currentUserId] = true;
+            showHeart = true;
+          });
+          Timer(Duration(milliseconds: 500), () {
+            setState(() {
+              showHeart = false;
+            });
+          });
+        } else {
+          setState(() {
+            showHeart = true;
+          });
+          Timer(Duration(milliseconds: 500), () {
+            setState(() {
+              showHeart = false;
+            });
+          });
+          
+        }
+      },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Stack(
+        child: Stack(
           alignment: Alignment.center,
           children: <Widget>[
             cachedNetworkImage(mediaUrl),
@@ -213,12 +308,12 @@ class _PostState extends State<Post> {
                     tween: Tween(begin: 0.8, end: 1.4),
                     curve: Curves.elasticOut,
                     cycles: 0,
-                    builder: (context,anim,child) => Transform.scale(
+                    builder: (context, anim, child) => Transform.scale(
                       scale: anim.value,
                       child: Icon(
                         Icons.favorite,
                         size: 80.0,
-                        color: Colors.red,
+                        color: Colors.white60,
                       ),
                     ),
                   )

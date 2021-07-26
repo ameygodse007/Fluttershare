@@ -111,7 +111,18 @@ class _EditProfileState extends State<EditProfile> {
   logout() async {
     
     await googleSignIn.signOut();
-    Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
+    
+    Navigator.of(context).pushAndRemoveUntil(
+  // the new route
+  MaterialPageRoute(
+    builder: (BuildContext context) => Home(),
+  ),
+
+  // this function should return true when we're done removing routes
+  // but because we want to remove all other screens, we make it
+  // always return false
+  (Route route) => false,
+);
   }
 
   @override

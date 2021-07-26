@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttershare/models/user.dart';
 import 'package:fluttershare/widgets/progress.dart';
 
+import 'activity_feed.dart';
 import 'home.dart';
 
 class Search extends StatefulWidget {
@@ -17,11 +18,10 @@ class _SearchState extends State<Search> {
 
   handleSearch(String query) {
     Future<QuerySnapshot> users = usersRef
-        .where("username", isGreaterThanOrEqualTo: query)
+        .where("displayName", isGreaterThanOrEqualTo: query)
         .getDocuments();
-    
     setState(() {
-      this.searchResultsFuture = users;
+      searchResultsFuture = users;
     });
   }
 
@@ -135,7 +135,7 @@ class UserResult extends StatelessWidget {
         child: Column(
             children: <Widget>[
               GestureDetector(
-                onTap: () => print('tapped'),
+                onTap: () => showsearchProfile(context, profileId: user.id),
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.grey,
