@@ -27,7 +27,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   sendmessage() {
     chats.document(currentuser+user.id).collection("messages").add({
       "message": commentController.text,
-      "sender": currentuser == user.id ? "sender" : "receiver"
+      "sender": currentuser == user.id ? "receiver" : "sender"
     });
     setState(() {
       sentmsg = true;
