@@ -18,10 +18,12 @@ class _EditProfileState extends State<EditProfile> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   TextEditingController displayNameController = TextEditingController();
   TextEditingController bioController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
   bool isLoading = false;
   User user;
   bool _displayNameValid = true;
   bool _bioValid = true;
+  bool usernamevalid = true;
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _EditProfileState extends State<EditProfile> {
     user = User.fromDocument(doc);
     displayNameController.text = user.displayName;
     bioController.text = user.bio;
+    usernameController.text = user.username.toString();
     setState(() {
       isLoading = false;
     });
@@ -57,6 +60,27 @@ class _EditProfileState extends State<EditProfile> {
           decoration: InputDecoration(
             hintText: "Update Display Name",
             errorText: _displayNameValid ? null : "Display Name too short",
+          ),
+        )
+      ],
+    );
+  }
+
+  Column buildusernameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+            padding: EdgeInsets.only(top: 12.0),
+            child: Text(
+              "Username",
+              style: TextStyle(color: Colors.grey),
+            )),
+        TextField(
+          controller: usernameController,
+          decoration: InputDecoration(
+            hintText: "Update Username",
+            errorText: usernamevalid ? null : "Username too short",
           ),
         )
       ],
@@ -94,12 +118,16 @@ class _EditProfileState extends State<EditProfile> {
       bioController.text.trim().length > 100
           ? _bioValid = false
           : _bioValid = true;
+	usernameController.text.trim().length <3 || usernameController.text.isEmpty
+	? usernamevalid = false
+	: usernamevalid = true;
     });
 
     if (_displayNameValid && _bioValid) {
       usersRef.document(widget.currentUserId).updateData({
         "displayName": displayNameController.text,
         "bio": bioController.text,
+	"username": usernameController.text,
       });
       SnackBar snackbar = SnackBar(content: Text("Profile updated!"));
       _scaffoldKey.currentState.showSnackBar(snackbar);
@@ -171,6 +199,7 @@ class _EditProfileState extends State<EditProfile> {
                         child: Column(
                           children: <Widget>[
                             buildDisplayNameField(),
+			    buildusernameField(),
                             buildBioField(),
                           ],
                         ),

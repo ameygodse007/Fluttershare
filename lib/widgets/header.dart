@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 AppBar header(context,
@@ -14,6 +13,6 @@ AppBar header(context,
       ),
     ),
     centerTitle: true,
-    backgroundColor: Color(0XFF8952F7),
+    backgroundColor: Theme.of(context).accentColor,
   );
 }

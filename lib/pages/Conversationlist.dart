@@ -37,7 +37,7 @@ class ConversationList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            user.username,
+                            user.username!=null ?user.username : user.displayName,
                             style: TextStyle(fontSize: 16),
                           ),
                           SizedBox(
