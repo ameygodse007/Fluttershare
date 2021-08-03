@@ -6,6 +6,8 @@ import 'package:fluttershare/widgets/progress.dart';
 
 import 'home.dart';
 
+
+
 class ChatDetailPage extends StatefulWidget {
   final User user;
   final String currentuser;
@@ -18,17 +20,17 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   TextEditingController commentController = TextEditingController();
   final User user;
-   bool sentmsg = false;
+  bool sentmsg = false;
   final String currentuser;
   _ChatDetailPageState({this.user, this.currentuser});
   String message = "";
   List<ChatMessage> messages = [];
-
+  List<ChatMessage> recemsgs = [];
   sendmessage() {
-    chats.document(currentuser+user.id).collection("messages").add({
-      "message": commentController.text,
-      "sender": currentuser == user.id ? "receiver" : "sender"
-    });
+    chats
+        .document(currentuser + user.id)
+        .collection("messages")
+        .add({"message": commentController.text, "sender": "sender"});
     setState(() {
       sentmsg = true;
     });
@@ -36,6 +38,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     print("user id" + user.id);
 
     commentController.clear();
+  }
+
+  getmsgs() async {
+    QuerySnapshot snapshot = await chats
+        .document(user.id + currentuser)
+        .collection('messages')
+        .getDocuments();
+    snapshot.documents.forEach((doc) => messages.add(ChatMessage(
+                messageContent: doc["message"], messageType: "receiver")));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getmsgs();
   }
 
   chatRoom() {
@@ -158,7 +175,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           hintText: "Write message...",
                           hintStyle: TextStyle(color: Colors.black54),
                           border: InputBorder.none),
-                      
                     ),
                   ),
                   SizedBox(
@@ -185,7 +201,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   buildmessages() {
     return StreamBuilder(
-        stream: chats.document(currentuser+user.id).collection("messages").snapshots(),
+        stream: chats
+            .document(currentuser + user.id)
+            .collection("messages")
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return circularProgress();
