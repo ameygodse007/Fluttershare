@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
-class ChatMessage{
+class ChatMessage {
   String messageContent;
   String messageType;
-  ChatMessage({ this.messageContent,  this.messageType});
+  String time;
+  ChatMessage({this.messageContent, this.messageType, this.time});
 }

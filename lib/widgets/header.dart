@@ -13,6 +13,6 @@ AppBar header(context,
       ),
     ),
     centerTitle: true,
-    backgroundColor: Theme.of(context).accentColor,
+    backgroundColor: Colors.deepPurple,
   );
 }

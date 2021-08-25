@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttershare/models/Chatmessage.dart';
 import 'package:fluttershare/models/user.dart';
 import 'package:fluttershare/widgets/progress.dart';
-
+import 'activity_feed.dart';
 import 'home.dart';
-
-
 
 class ChatDetailPage extends StatefulWidget {
   final User user;
@@ -27,10 +25,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   List<ChatMessage> messages = [];
   List<ChatMessage> recemsgs = [];
   sendmessage() {
-    chats
-        .document(currentuser + user.id)
-        .collection("messages")
-        .add({"message": commentController.text, "sender": "sender"});
+    chats.document(currentuser + user.id).collection("messages").add({
+      "message": commentController.text,
+      "sender": "sender",
+      "time": DateTime.now().microsecondsSinceEpoch.toString()
+    });
     setState(() {
       sentmsg = true;
     });
@@ -40,19 +39,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     commentController.clear();
   }
 
-  getmsgs() async {
-    QuerySnapshot snapshot = await chats
-        .document(user.id + currentuser)
-        .collection('messages')
-        .getDocuments();
-    snapshot.documents.forEach((doc) => messages.add(ChatMessage(
-                messageContent: doc["message"], messageType: "receiver")));
-  }
+  // getmsgs() async {
+  //   QuerySnapshot snapshot = await chats
+  //       .document(user.id + currentuser)
+  //       .collection('messages')
+  //       .getDocuments();
+  //   snapshot.documents.forEach((doc) => recemsgs.add(
+  //       ChatMessage(messageContent: doc["message"], messageType: "receiver", time:doc["time"])));
+  // }
 
   @override
   void initState() {
     super.initState();
-    getmsgs();
   }
 
   chatRoom() {
@@ -62,6 +60,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         flexibleSpace: SafeArea(
+
           child: Container(
             padding: EdgeInsets.only(right: 16),
             child: Row(
@@ -78,9 +77,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 SizedBox(
                   width: 2,
                 ),
-                CircleAvatar(
-                  backgroundImage: NetworkImage(user.photoUrl),
-                  maxRadius: 20,
+                GestureDetector(
+                  onTap: () => showsearchProfile(context, profileId: user.id),
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(user.photoUrl),
+                    maxRadius: 20,
+                  ),
                 ),
                 SizedBox(
                   width: 12,
@@ -112,7 +114,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             child: ListView.builder(
               itemCount: messages.length,
               shrinkWrap: true,
-              padding: EdgeInsets.only(top: 10, bottom: 10),
+              padding: EdgeInsets.only(top: 10, bottom: 70),
               physics: NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 return Container(
@@ -201,22 +203,47 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   buildmessages() {
     return StreamBuilder(
-        stream: chats
-            .document(currentuser + user.id)
-            .collection("messages")
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return circularProgress();
-          }
-          messages = [];
-          snapshot.data.documents.forEach((doc) {
-            messages.add(ChatMessage(
-                messageContent: doc["message"], messageType: doc["sender"]));
-          });
-
-          return chatRoom();
+      stream: chats
+          .document(user.id + currentuser)
+          .collection("messages")
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return circularProgress();
+        }
+        recemsgs = [];
+        snapshot.data.documents.forEach((doc) {
+          recemsgs.add(ChatMessage(
+              messageContent: doc["message"],
+              messageType: "receiver",
+              time: doc["time"]));
         });
+
+        return StreamBuilder(
+          stream: chats
+              .document(currentuser + user.id)
+              .collection("messages")
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return circularProgress();
+            }
+            messages = [];
+            snapshot.data.documents.forEach((doc) {
+              messages.add(ChatMessage(
+                  messageContent: doc["message"],
+                  messageType: "sender",
+                  time: doc["time"]));
+            });
+            messages.addAll(recemsgs);
+            messages
+                .sort((a, b) => int.parse(a.time).compareTo(int.parse(b.time)));
+
+            return chatRoom();
+          },
+        );
+      },
+    );
   }
 
   @override

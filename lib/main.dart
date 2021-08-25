@@ -16,7 +16,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
         accentColor: Colors.teal,
+        brightness: Brightness.light
       ),
+      
     );
   }
 }
